@@ -6074,7 +6074,7 @@ function formatVersion(version) {
 async function downloadUp(version, channel, url, platform, architecture) {
   let os = 'linux'
   let arch = 'amd64'
-  let bin = 'up'
+  const bin = 'up'
 
   switch (platform) {
     case 'darwin':
