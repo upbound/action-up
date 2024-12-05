@@ -1,18 +1,24 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'GitHub Acton for Upbound - up'
+description: 'Connect to Upbound using up CLI'
+author: 'upbound'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
-    required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  channel:
+    description: 'Installation channel for up'
+    default: 'stable'
+  version:
+    description: 'Version of up to install'
+    default: 'current'
+  url:
+    description: 'Where to download up from'
+    default: 'https://cli.upbound.io'
+  token:
+    description: 'Upbound API token'
+    default: ''
+  skip_login:
+    description: 'Skip login'
+    default: 'false'
 
 runs:
   using: node20

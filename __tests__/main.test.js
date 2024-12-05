@@ -1,96 +1,123 @@
-/**
- * Unit tests for the action's main functionality, src/main.js
- */
 const core = require('@actions/core')
+const exec = require('@actions/exec')
+const tc = require('@actions/tool-cache')
 const main = require('../src/main')
+const { expect, describe } = require('@jest/globals')
+const { formatVersion } = require('../src/main')
 
 // Mock the GitHub Actions core library
-const debugMock = jest.spyOn(core, 'debug').mockImplementation()
+const infoMock = jest.spyOn(core, 'info').mockImplementation()
 const getInputMock = jest.spyOn(core, 'getInput').mockImplementation()
-const setFailedMock = jest.spyOn(core, 'setFailed').mockImplementation()
-const setOutputMock = jest.spyOn(core, 'setOutput').mockImplementation()
+const execMock = jest.spyOn(exec, 'exec').mockImplementation()
+const downloadToolMock = jest.spyOn(tc, 'downloadTool').mockImplementation()
+const cacheFileMock = jest.spyOn(tc, 'cacheFile').mockImplementation()
+const findMock = jest.spyOn(tc, 'find').mockImplementation()
 
-// Mock the action's main function
-const runMock = jest.spyOn(main, 'run')
-
-// Other utilities
-const timeRegex = /^\d{2}:\d{2}:\d{2}/
-
-describe('action', () => {
+describe('formatVersion', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
-  it('sets the time output', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'milliseconds':
-          return '500'
-        default:
-          return ''
-      }
-    })
-
-    await main.run()
-    expect(runMock).toHaveReturned()
-
-    // Verify that all of the core library functions were called correctly
-    expect(debugMock).toHaveBeenNthCalledWith(1, 'Waiting 500 milliseconds ...')
-    expect(debugMock).toHaveBeenNthCalledWith(
-      2,
-      expect.stringMatching(timeRegex)
-    )
-    expect(debugMock).toHaveBeenNthCalledWith(
-      3,
-      expect.stringMatching(timeRegex)
-    )
-    expect(setOutputMock).toHaveBeenNthCalledWith(
-      1,
-      'time',
-      expect.stringMatching(timeRegex)
-    )
+  it('leaves the version unchanged if it already has a "v" prefix', () => {
+    const version = 'v0.12.1'
+    const formattedVersion = formatVersion(version)
+    expect(formattedVersion).toBe('v0.12.1')
   })
 
-  it('sets a failed status', async () => {
-    // Set the action's inputs as return values from core.getInput()
-    getInputMock.mockImplementation(name => {
-      switch (name) {
-        case 'milliseconds':
-          return 'this is not a number'
-        default:
-          return ''
-      }
-    })
-
-    await main.run()
-    expect(runMock).toHaveReturned()
-
-    // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenNthCalledWith(
-      1,
-      'milliseconds not a number'
-    )
+  it('adds a "v" prefix if not present', () => {
+    const version = '0.12.1'
+    const formattedVersion = formatVersion(version)
+    expect(formattedVersion).toBe('v0.12.1')
   })
 
-  it('fails if no input is provided', async () => {
-    // Set the action's inputs as return values from core.getInput()
+  it('returns the version unchanged if it does not start with a number', () => {
+    expect(formatVersion('current')).toBe('current')
+    expect(formatVersion('latest')).toBe('latest')
+  })
+})
+
+describe('up', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+
+    // Mock platform and architecture
+    Object.defineProperty(process, 'platform', {
+      value: 'linux'
+    })
+    Object.defineProperty(process, 'arch', {
+      value: 'x64'
+    })
+  })
+
+  it('installs the Up CLI and logs in when token is provided', async () => {
+    // Mock inputs
     getInputMock.mockImplementation(name => {
       switch (name) {
-        case 'milliseconds':
-          throw new Error('Input required and not supplied: milliseconds')
+        case 'version':
+          return 'v0.12.1'
+        case 'channel':
+          return 'stable'
+        case 'url':
+          return 'https://cli.upbound.io'
+        case 'token':
+          return 'test-token'
         default:
           return ''
       }
     })
 
-    await main.run()
-    expect(runMock).toHaveReturned()
+    findMock.mockReturnValue(null)
+    execMock.mockResolvedValue(0)
+    downloadToolMock.mockResolvedValue('/tmp/up')
 
-    // Verify that all of the core library functions were called correctly
-    expect(setFailedMock).toHaveBeenNthCalledWith(
-      1,
-      'Input required and not supplied: milliseconds'
+    await main.run()
+
+    expect(findMock).toHaveBeenCalledWith('up', 'v0.12.1')
+    expect(downloadToolMock).toHaveBeenCalledWith(
+      'https://cli.upbound.io/stable/v0.12.1/bin/linux_amd64/up'
     )
+    expect(cacheFileMock).toHaveBeenCalledWith('/tmp/up', 'up', 'up', 'v0.12.1')
+    expect(execMock).toHaveBeenCalledWith('chmod +x', ['/tmp/up'])
+    expect(execMock).toHaveBeenNthCalledWith(1, 'chmod +x', ['/tmp/up'])
+    expect(execMock).toHaveBeenNthCalledWith(2, 'up version')
+    expect(execMock).toHaveBeenNthCalledWith(3, 'up login --token', [
+      'test-token'
+    ])
+  })
+
+  it('installs the up CLI but skips login when token is not provided', async () => {
+    // Mock inputs
+    getInputMock.mockImplementation(name => {
+      switch (name) {
+        case 'version':
+          return 'v0.12.1'
+        case 'channel':
+          return 'stable'
+        case 'url':
+          return 'https://cli.upbound.io'
+        case 'skip_login':
+          return true
+        default:
+          return ''
+      }
+    })
+
+    findMock.mockReturnValue(null)
+    execMock.mockResolvedValue(0)
+    downloadToolMock.mockResolvedValue('/tmp/up')
+
+    await main.run()
+
+    expect(findMock).toHaveBeenCalledWith('up', 'v0.12.1')
+    expect(downloadToolMock).toHaveBeenCalledWith(
+      'https://cli.upbound.io/stable/v0.12.1/bin/linux_amd64/up'
+    )
+    expect(cacheFileMock).toHaveBeenCalledWith('/tmp/up', 'up', 'up', 'v0.12.1')
+    expect(execMock).toHaveBeenCalledWith('chmod +x', ['/tmp/up'])
+    expect(execMock).toHaveBeenNthCalledWith(1, 'chmod +x', ['/tmp/up'])
+    expect(execMock).toHaveBeenNthCalledWith(2, 'up version')
+    expect(execMock).not.toHaveBeenNthCalledWith(3, 'up login --token', [
+      'test-token'
+    ])
   })
 })

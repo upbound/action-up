@@ -1,21 +1,22 @@
 {
-  "name": "javascript-action",
-  "description": "GitHub Actions JavaScript Template",
+  "name": "action-up",
+  "description": "GitHub Actions for Upbound - up",
   "version": "0.0.0",
   "author": "",
   "private": true,
-  "homepage": "https://github.com/actions/javascript-action#readme",
+  "homepage": "https://github.com/upbond/action-up#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/javascript-action.git"
+    "url": "git+https://github.com/upbond/action-up.git"
   },
   "bugs": {
-    "url": "https://github.com/actions/javascript-action/issues"
+    "url": "https://github.com/upbond/action-up/issues"
   },
   "keywords": [
     "GitHub",
     "Actions",
-    "JavaScript"
+    "Upbound",
+    "Crossplane"
   ],
   "exports": {
     ".": "./dist/index.js"
@@ -64,7 +65,8 @@
     ]
   },
   "dependencies": {
-    "@actions/core": "^1.11.1"
+    "@actions/core": "^1.11.1",
+    "@actions/tool-cache": "^2.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
