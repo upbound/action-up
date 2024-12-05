@@ -1,30 +1,91 @@
 const core = require('@actions/core')
-const { wait } = require('./wait')
+const exec = require('@actions/exec')
+const tc = require('@actions/tool-cache')
+const fs = require('fs')
 
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
+function formatVersion(version) {
+  return /^\d/.test(version) ? `v${version}` : version
+}
+
+async function downloadUp(version, channel, url, platform, architecture) {
+  let os = 'linux'
+  let arch = 'amd64'
+  let bin = 'up'
+
+  switch (platform) {
+    case 'darwin':
+      os = 'darwin'
+      break
+    case 'linux':
+      os = 'linux'
+      break
+    default:
+      core.warning(`Unknown platform: ${platform}; defaulting to ${os}`)
+      break
+  }
+
+  switch (architecture) {
+    case 'arm64':
+      arch = 'arm64'
+      break
+    case 'x64':
+      arch = 'amd64'
+      break
+    default:
+      core.warning(
+        `Unknown architecture: ${architecture}; defaulting to ${arch}`
+      )
+      break
+  }
+
+  const downloadURL = `${url}/${channel}/${version}/bin/${os}_${arch}/${bin}`
+  const binaryPath = await tc.downloadTool(downloadURL)
+
+  await exec.exec('chmod +x', [binaryPath])
+
+  return tc.cacheFile(binaryPath, bin, 'up', version)
+}
+
 async function run() {
   try {
-    const ms = core.getInput('milliseconds', { required: true })
+    const version = formatVersion(core.getInput('version'))
+    const channel = core.getInput('channel')
+    const url = core.getInput('url')
 
-    // Debug logs are only output if the `ACTIONS_STEP_DEBUG` secret is true
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    let installPath = tc.find('up', version)
+    if (!installPath) {
+      installPath = await downloadUp(
+        version,
+        channel,
+        url,
+        process.platform,
+        process.arch
+      )
+    }
 
-    // Log the current timestamp, wait, then log the new timestamp
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    core.addPath(installPath)
+    core.debug(`up CLI version ${version} installed to ${installPath}`)
 
-    // Set outputs for other workflow steps to use
-    core.setOutput('time', new Date().toTimeString())
+    core.info('Verifying installation...')
+    await exec.exec('up version')
+
+    // Skip login if requested
+    const skip_login = core.getInput('skip_login')
+    if (skip_login.toLowerCase() === 'true') {
+      core.info('Skipping up login')
+      return
+    }
+
+    const token = core.getInput('token', { required: true })
+    core.setSecret(token)
+    await exec.exec('up login --token', [token])
+    core.info('Successfully logged into Upbound')
   } catch (error) {
-    // Fail the workflow run if an error occurs
     core.setFailed(error.message)
   }
 }
 
 module.exports = {
-  run
+  run,
+  formatVersion
 }
