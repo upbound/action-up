@@ -11,7 +11,7 @@ and add the following step to your workflow:
 
 ```yaml
 - name: Install and login with up
-  uses: upbound/action-up@v1.0.0
+  uses: upbound/action-up@v1
   with:
     token: ${{ secrets.UP_API_TOKEN }}
     organization: my-org
@@ -22,7 +22,7 @@ As an example, you can set your Upbound context:
 
 ```yaml
 - name: Install and login with up
-  uses: upbound/action-up@v1.0.0
+  uses: upbound/action-up@v1
   with:
     token: ${{ secrets.UP_API_TOKEN }}
     organization: my-org
