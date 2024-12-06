@@ -57,7 +57,7 @@ jobs:
         id: test-action
         uses: ./
         with:
-          skip_login: true
+          skip-login: true
 
       - name: Verify Installation
         run: up version

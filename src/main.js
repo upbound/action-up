@@ -4,12 +4,13 @@ const tc = require('@actions/tool-cache')
 const fs = require('fs')
 
 const upToolname = 'up'
+const currentVersionUrl = 'https://cli.upbound.io/stable/current/version'
 
 function formatVersion(version) {
   return /^\d/.test(version) ? `v${version}` : version
 }
 
-async function downloadUp(version, channel, url, platform, architecture) {
+async function downloadUp(endpoint, channel, version, platform, architecture) {
   let os = 'linux'
   let arch = 'amd64'
 
@@ -39,7 +40,7 @@ async function downloadUp(version, channel, url, platform, architecture) {
       break
   }
 
-  const downloadURL = `${url}/${channel}/${version}/bin/${os}_${arch}/${upToolname}`
+  const downloadURL = `${endpoint}/${channel}/${version}/bin/${os}_${arch}/${upToolname}`
   const binaryPath = await tc.downloadTool(downloadURL)
 
   fs.chmodSync(binaryPath, '775')
@@ -49,16 +50,20 @@ async function downloadUp(version, channel, url, platform, architecture) {
 
 async function run() {
   try {
-    const version = formatVersion(core.getInput('version'))
-    const channel = core.getInput('channel')
-    const url = core.getInput('url')
+    let version = formatVersion(core.getInput('version', { required: true }))
+    const channel = core.getInput('channel', { required: true })
+    const endpoint = core.getInput('endpoint', { required: true })
 
-    let installPath = tc.find('up', version)
+    if (version.toLowerCase() == 'current') {
+      version = await getCurrentUpVersion()
+    }
+
+    let installPath = tc.find(upToolname, version)
     if (!installPath) {
       installPath = await downloadUp(
         version,
         channel,
-        url,
+        endpoint,
         process.platform,
         process.arch
       )
@@ -84,6 +89,23 @@ async function run() {
   } catch (error) {
     core.setFailed(error.message)
   }
+}
+
+async function getCurrentUpVersion() {
+  return tc.downloadTool(currentVersionUrl).then(
+    downloadPath => {
+      let version = fs.readFileSync(downloadPath, 'utf8').toString().trim()
+      if (!version) {
+        version = currentVersionUrl
+      }
+      return version
+    },
+    error => {
+      core.debug(error)
+      core.warning('GetCurrentVersionFailed')
+      return currentVersionUrl
+    }
+  )
 }
 
 module.exports = {
