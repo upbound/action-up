@@ -77,6 +77,7 @@ async function run() {
 
     // Skip login if requested
     const skipLogin = core.getInput('skip-login')
+    core.info(`skip-login ${skipLogin}`)
     if (skipLogin.toLowerCase() === 'true') {
       core.info('Skipping up login')
       return
