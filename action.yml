@@ -23,6 +23,9 @@ inputs:
     description: 'Organization to select when login'
     default: ''
 
+branding:
+   color: 'purple'
+
 runs:
   using: node20
   main: dist/index.js
