@@ -11,9 +11,10 @@ and add the following step to your workflow:
 
 ```yaml
 - name: Install and login with up
-  uses: upbound/action-up@v0.1.0
+  uses: upbound/action-up@v1
   with:
     token: ${{ secrets.UP_API_TOKEN }}
+    organization: my-org
 ```
 
 `up` will now be available in the environement and can be used in follow steps.
@@ -21,9 +22,10 @@ As an example, you can set your Upbound context:
 
 ```yaml
 - name: Install and login with up
-  uses: upbound/action-up@v0.1.0
+  uses: upbound/action-up@v1
   with:
     token: ${{ secrets.UP_API_TOKEN }}
+    organization: my-org
 
 - name: Set Upbound context
   run: up ctx my-org/upbound-gcp-us-west-1/default/my-ctp
