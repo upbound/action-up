@@ -53,9 +53,49 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
 
-      - name: Test Local Action
+      - name: Install up
         id: test-action
         uses: ./
         with:
-          token: test-token
-          skip_login: true
+          api-token: ${{ secrets.UP_API_TOKEN }}
+          organization: github-actions-test
+
+      - name: Verify Installation
+        run: up version
+
+  test-action-skip-login:
+    name: GitHub Actions Test skip-login
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Install up
+        id: test-action
+        uses: ./
+        with:
+          skip-login: true
+
+      - name: Verify Installation
+        run: up version
+
+  test-action-skip-login-custom-version:
+    name: GitHub Actions Test custom version
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Install up
+        id: test-action
+        uses: ./
+        with:
+          version: v0.32.0
+          skip-login: true
+
+      - name: Verify Installation
+        run: up version
