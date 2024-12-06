@@ -82,7 +82,12 @@ async function run() {
       return
     }
 
-    const apiToken = core.getInput('api-token', { required: true })
+    const apiToken = core.getInput('api-token')
+    if (!apiToken) {
+      core.error('Missing required API token to login')
+      return
+    }
+
     core.setSecret(apiToken)
     await exec.exec('up login --token', [apiToken])
     core.info('Successfully logged into Upbound')
