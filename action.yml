@@ -24,7 +24,7 @@ inputs:
     default: ''
 
 branding:
-   color: 'purple'
+  color: 'purple'
 
 runs:
   using: node20
