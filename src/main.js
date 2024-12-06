@@ -77,15 +77,14 @@ async function run() {
 
     // Skip login if requested
     const skipLogin = core.getInput('skip-login')
-    core.info(`skip-login ${skipLogin}`)
     if (skipLogin.toLowerCase() === 'true') {
       core.info('Skipping up login')
       return
     }
 
-    const token = core.getInput('token', { required: true })
-    core.setSecret(token)
-    await exec.exec('up login --token', [token])
+    const apiToken = core.getInput('api-token', { required: true })
+    core.setSecret(apiToken)
+    await exec.exec('up login --token', [apiToken])
     core.info('Successfully logged into Upbound')
   } catch (error) {
     core.setFailed(error.message)
