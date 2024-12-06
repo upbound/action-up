@@ -98,4 +98,9 @@ jobs:
           skip-login: true
 
       - name: Verify Installation
-        run: up version
+        run: |
+          INSTALLED_VERSION=$(up version --client | yq .Client.Version)
+          if [[ "$INSTALLED_VERSION" != "v0.32.0 "]]; then
+            echo "Error: Expected version v0.32.0 but got $INSTALLED_VERSION"
+            exit 1
+          fi

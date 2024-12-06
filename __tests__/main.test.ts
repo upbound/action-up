@@ -31,12 +31,23 @@ describe('Testing all functions in run file.', () => {
       .spyOn(tc, 'downloadTool')
       .mockReturnValue(Promise.resolve('pathToTool'))
     jest.spyOn(fs, 'readFileSync').mockReturnValue('v0.12.1')
-    expect(await run.getCurrentUpVersion()).toBe('v0.12.1')
+    expect(await run.getCurrentUpVersion('stable')).toBe('v0.12.1')
     expect(tc.downloadTool).toHaveBeenCalled()
     expect(fs.readFileSync).toHaveBeenCalledWith('pathToTool', 'utf8')
   })
 
-  it('download up, add it to tc and return path to it', async () => {
+  it('download current version file on main channel, read version and return it', async () => {
+    jest.spyOn(core, 'getInput').mockReturnValue('main')
+    jest
+      .spyOn(tc, 'downloadTool')
+      .mockReturnValue(Promise.resolve('pathToTool'))
+    jest.spyOn(fs, 'readFileSync').mockReturnValue('v0.12.1')
+    expect(await run.getCurrentUpVersion('main')).toBe('v0.12.1')
+    expect(tc.downloadTool).toHaveBeenCalled()
+    expect(fs.readFileSync).toHaveBeenCalledWith('pathToTool', 'utf8')
+  })
+
+  it('download up, add it to tc', async () => {
     jest
       .spyOn(tc, 'downloadTool')
       .mockReturnValue(Promise.resolve('pathToTool'))
@@ -60,41 +71,5 @@ describe('Testing all functions in run file.', () => {
     expect(tc.downloadTool).toHaveBeenCalled()
     expect(tc.cacheFile).toHaveBeenCalled()
     expect(fs.chmodSync).toHaveBeenCalledWith('pathToTool', '775')
-  })
-
-  it('download specified version', async () => {
-    jest.spyOn(core, 'getInput').mockReturnValue('v0.35.0')
-    jest.spyOn(tc, 'find').mockReturnValue('pathToCachedTool')
-    Object.defineProperty(process, 'platform', {
-      value: 'linux',
-      writable: true
-    })
-    jest.spyOn(fs, 'chmodSync').mockImplementation()
-    jest.spyOn(core, 'addPath').mockImplementation()
-    expect(await run.run()).toBeUndefined()
-    expect(core.getInput).toHaveBeenCalledWith('version', { required: true })
-    expect(core.addPath).toHaveBeenCalledWith('pathToCachedTool')
-  })
-
-  it('get current version and download it', async () => {
-    jest.spyOn(core, 'getInput').mockReturnValue('current')
-    jest
-      .spyOn(tc, 'downloadTool')
-      .mockReturnValue(Promise.resolve('pathToTool'))
-    jest.spyOn(fs, 'readFileSync').mockReturnValue('v0.12.1')
-    jest.spyOn(tc, 'find').mockReturnValue('pathToCachedTool')
-    Object.defineProperty(process, 'platform', {
-      value: 'linux',
-      writable: true
-    })
-    jest.spyOn(fs, 'chmodSync').mockImplementation()
-    jest.spyOn(core, 'addPath').mockImplementation()
-    jest.spyOn(console, 'log').mockImplementation()
-    expect(await run.run()).toBeUndefined()
-    expect(tc.downloadTool).toHaveBeenCalledWith(
-      'https://cli.upbound.io/stable/current/version'
-    )
-    expect(core.getInput).toHaveBeenCalledWith('version', { required: true })
-    expect(core.addPath).toHaveBeenCalledWith('pathToCachedTool')
   })
 })

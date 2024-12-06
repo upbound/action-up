@@ -4,7 +4,6 @@ import * as tc from '@actions/tool-cache'
 import * as fs from 'fs'
 
 const upToolname = 'up'
-const currentVersionUrl = 'https://cli.upbound.io/stable/current/version'
 
 function formatVersion(version: string): string {
   return /^\d/.test(version) ? `v${version}` : version
@@ -61,7 +60,7 @@ async function run(): Promise<void> {
     const endpoint = core.getInput('endpoint', { required: true })
 
     if (version.toLowerCase() == 'current') {
-      version = await getCurrentUpVersion()
+      version = await getCurrentUpVersion(channel)
     }
 
     let installPath = tc.find(upToolname, version)
@@ -103,7 +102,9 @@ async function run(): Promise<void> {
   }
 }
 
-async function getCurrentUpVersion(): Promise<string> {
+async function getCurrentUpVersion(channel: string): Promise<string> {
+  const currentVersionUrl = `https://cli.upbound.io/${channel}/current/version`
+
   return tc.downloadTool(currentVersionUrl).then(
     downloadPath => {
       let version = fs.readFileSync(downloadPath, 'utf8').toString().trim()
