@@ -6059,99 +6059,129 @@ module.exports = v4;
 
 /***/ }),
 
-/***/ 936:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 730:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
-const core = __nccwpck_require__(484)
-const exec = __nccwpck_require__(236)
-const tc = __nccwpck_require__(472)
-const fs = __nccwpck_require__(896)
+"use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = run;
+exports.formatVersion = formatVersion;
+exports.getCurrentUpVersion = getCurrentUpVersion;
+exports.downloadUp = downloadUp;
+const core = __importStar(__nccwpck_require__(484));
+const exec = __importStar(__nccwpck_require__(236));
+const tc = __importStar(__nccwpck_require__(472));
+const fs = __importStar(__nccwpck_require__(896));
+const upToolname = 'up';
 function formatVersion(version) {
-  return /^\d/.test(version) ? `v${version}` : version
+    return /^\d/.test(version) ? `v${version}` : version;
 }
-
-async function downloadUp(version, channel, url, platform, architecture) {
-  let os = 'linux'
-  let arch = 'amd64'
-  const bin = 'up'
-
-  switch (platform) {
-    case 'darwin':
-      os = 'darwin'
-      break
-    case 'linux':
-      os = 'linux'
-      break
-    default:
-      core.warning(`Unknown platform: ${platform}; defaulting to ${os}`)
-      break
-  }
-
-  switch (architecture) {
-    case 'arm64':
-      arch = 'arm64'
-      break
-    case 'x64':
-      arch = 'amd64'
-      break
-    default:
-      core.warning(
-        `Unknown architecture: ${architecture}; defaulting to ${arch}`
-      )
-      break
-  }
-
-  const downloadURL = `${url}/${channel}/${version}/bin/${os}_${arch}/${bin}`
-  const binaryPath = await tc.downloadTool(downloadURL)
-
-  await exec.exec('chmod +x', [binaryPath])
-
-  return tc.cacheFile(binaryPath, bin, 'up', version)
+async function downloadUp(endpoint, channel, version, platform, architecture) {
+    let os = 'linux';
+    let arch = 'amd64';
+    switch (platform) {
+        case 'darwin':
+            os = 'darwin';
+            break;
+        case 'linux':
+            os = 'linux';
+            break;
+        default:
+            core.warning(`Unknown platform: ${platform}; defaulting to ${os}`);
+            break;
+    }
+    switch (architecture) {
+        case 'arm64':
+            arch = 'arm64';
+            break;
+        case 'x64':
+            arch = 'amd64';
+            break;
+        default:
+            core.warning(`Unknown architecture: ${architecture}; defaulting to ${arch}`);
+            break;
+    }
+    const downloadURL = `${endpoint}/${channel}/${version}/bin/${os}_${arch}/${upToolname}`;
+    const binaryPath = await tc.downloadTool(downloadURL);
+    fs.chmodSync(binaryPath, '775');
+    return tc.cacheFile(binaryPath, upToolname, upToolname, version);
 }
-
 async function run() {
-  try {
-    const version = formatVersion(core.getInput('version'))
-    const channel = core.getInput('channel')
-    const url = core.getInput('url')
-
-    let installPath = tc.find('up', version)
-    if (!installPath) {
-      installPath = await downloadUp(
-        version,
-        channel,
-        url,
-        process.platform,
-        process.arch
-      )
+    try {
+        let version = formatVersion(core.getInput('version', { required: true }));
+        const channel = core.getInput('channel', { required: true });
+        const endpoint = core.getInput('endpoint', { required: true });
+        if (version.toLowerCase() == 'current') {
+            version = await getCurrentUpVersion(channel);
+        }
+        let installPath = tc.find(upToolname, version);
+        if (!installPath) {
+            installPath = await downloadUp(endpoint, channel, version, process.platform, process.arch);
+        }
+        core.addPath(installPath);
+        core.debug(`up CLI version ${version} installed to ${installPath}`);
+        core.info('Verifying installation...');
+        await exec.exec('up', ['version']);
+        const skipLogin = core.getInput('skip-login');
+        if (skipLogin.toLowerCase() === 'true') {
+            core.info('Skipping up login');
+            return;
+        }
+        const apiToken = core.getInput('api-token', { required: true });
+        const organization = core.getInput('organization', { required: true });
+        core.setSecret(apiToken);
+        await exec.exec('up', [
+            'login',
+            '--token',
+            apiToken,
+            '--account',
+            organization
+        ]);
+        core.info('Successfully logged into Upbound');
     }
-
-    core.addPath(installPath)
-    core.debug(`up CLI version ${version} installed to ${installPath}`)
-
-    core.info('Verifying installation...')
-    await exec.exec('up version')
-
-    // Skip login if requested
-    const skip_login = core.getInput('skip_login')
-    if (skip_login.toLowerCase() === 'true') {
-      core.info('Skipping up login')
-      return
+    catch (error) {
+        if (error instanceof Error)
+            core.setFailed(error.message);
     }
-
-    const token = core.getInput('token', { required: true })
-    core.setSecret(token)
-    await exec.exec('up login --token', [token])
-    core.info('Successfully logged into Upbound')
-  } catch (error) {
-    core.setFailed(error.message)
-  }
 }
-
-module.exports = {
-  run,
-  formatVersion
+async function getCurrentUpVersion(channel) {
+    const currentVersionUrl = `https://cli.upbound.io/${channel}/current/version`;
+    return tc.downloadTool(currentVersionUrl).then(downloadPath => {
+        let version = fs.readFileSync(downloadPath, 'utf8').toString().trim();
+        if (!version) {
+            version = currentVersionUrl;
+        }
+        return version;
+    }, (error) => {
+        if (error instanceof Error)
+            core.debug(error.message);
+        core.warning('GetCurrentVersionFailed');
+        return currentVersionUrl;
+    });
 }
 
 
@@ -6316,12 +6346,20 @@ module.exports = require("util");
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 /**
  * The entrypoint for the action.
  */
-const { run } = __nccwpck_require__(936)
+const main_1 = __nccwpck_require__(730);
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+(0, main_1.run)();
 
-run()
+})();
 
 module.exports = __webpack_exports__;
 /******/ })()

@@ -4,7 +4,30 @@ This action enabbles you to interact with Upbound by installing the up CLI.
 
 ## Usage
 
-TODO
+To install the latest version of `up` and use it in GitHub Actions workflows,
+[create an Upbound API token](https://docs.upbound.io/all-spaces/spaces/console/#create-a-personal-access-token),
+[add it as a secret to your repository](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-encrypted-secrets-for-a-repository),
+and add the following step to your workflow:
+
+```yaml
+- name: Install and login with up
+  uses: upbound/action-up@v0.1.0
+  with:
+    token: ${{ secrets.UP_API_TOKEN }}
+```
+
+`up` will now be available in the environement and can be used in follow steps.
+As an example, you can set your Upbound context:
+
+```yaml
+- name: Install and login with up
+  uses: upbound/action-up@v0.1.0
+  with:
+    token: ${{ secrets.UP_API_TOKEN }}
+
+- name: Set Upbound context
+  run: up ctx my-org/upbound-gcp-us-west-1/default/my-ctp
+```
 
 ## Contributing
 
