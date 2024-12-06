@@ -10,23 +10,23 @@ To install the latest version of `up` and use it in GitHub Actions workflows,
 and add the following step to your workflow:
 
 ```yaml
-      - name: Install and login with up
-        uses: upbound/action-up@v0.1.0
-        with:
-          token: ${{ secrets.UP_API_TOKEN }}
+- name: Install and login with up
+  uses: upbound/action-up@v0.1.0
+  with:
+    token: ${{ secrets.UP_API_TOKEN }}
 ```
 
 `up` will now be available in the environement and can be used in follow steps.
 As an example, you can set your Upbound context:
 
 ```yaml
-      - name: Install and login with up
-        uses: upbound/action-up@v0.1.0
-        with:
-          token: ${{ secrets.UP_API_TOKEN }}
+- name: Install and login with up
+  uses: upbound/action-up@v0.1.0
+  with:
+    token: ${{ secrets.UP_API_TOKEN }}
 
-      - name: Set Upbound context
-        run: up ctx my-org/upbound-gcp-us-west-1/default/my-ctp
+- name: Set Upbound context
+  run: up ctx my-org/upbound-gcp-us-west-1/default/my-ctp
 ```
 
 ## Contributing
