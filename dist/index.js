@@ -6067,14 +6067,16 @@ const exec = __nccwpck_require__(236)
 const tc = __nccwpck_require__(472)
 const fs = __nccwpck_require__(896)
 
+const upToolname = 'up'
+const currentVersionUrl = 'https://cli.upbound.io/stable/current/version'
+
 function formatVersion(version) {
   return /^\d/.test(version) ? `v${version}` : version
 }
 
-async function downloadUp(version, channel, url, platform, architecture) {
+async function downloadUp(endpoint, channel, version, platform, architecture) {
   let os = 'linux'
   let arch = 'amd64'
-  const bin = 'up'
 
   switch (platform) {
     case 'darwin':
@@ -6102,26 +6104,30 @@ async function downloadUp(version, channel, url, platform, architecture) {
       break
   }
 
-  const downloadURL = `${url}/${channel}/${version}/bin/${os}_${arch}/${bin}`
+  const downloadURL = `${endpoint}/${channel}/${version}/bin/${os}_${arch}/${upToolname}`
   const binaryPath = await tc.downloadTool(downloadURL)
 
-  await exec.exec('chmod +x', [binaryPath])
+  fs.chmodSync(binaryPath, '775')
 
-  return tc.cacheFile(binaryPath, bin, 'up', version)
+  return tc.cacheFile(binaryPath, upToolname, upToolname, version)
 }
 
 async function run() {
   try {
-    const version = formatVersion(core.getInput('version'))
-    const channel = core.getInput('channel')
-    const url = core.getInput('url')
+    let version = formatVersion(core.getInput('version', { required: true }))
+    const channel = core.getInput('channel', { required: true })
+    const endpoint = core.getInput('endpoint', { required: true })
 
-    let installPath = tc.find('up', version)
+    if (version.toLowerCase() == 'current') {
+      version = await getCurrentUpVersion()
+    }
+
+    let installPath = tc.find(upToolname, version)
     if (!installPath) {
       installPath = await downloadUp(
         version,
         channel,
-        url,
+        endpoint,
         process.platform,
         process.arch
       )
@@ -6134,19 +6140,41 @@ async function run() {
     await exec.exec('up version')
 
     // Skip login if requested
-    const skip_login = core.getInput('skip_login')
-    if (skip_login.toLowerCase() === 'true') {
+    const skipLogin = core.getInput('skip-login')
+    if (skipLogin.toLowerCase() === 'true') {
       core.info('Skipping up login')
       return
     }
 
-    const token = core.getInput('token', { required: true })
-    core.setSecret(token)
-    await exec.exec('up login --token', [token])
+    const apiToken = core.getInput('api-token')
+    if (!apiToken) {
+      core.error('Missing required API token to login')
+      return
+    }
+
+    core.setSecret(apiToken)
+    await exec.exec('up login --token', [apiToken])
     core.info('Successfully logged into Upbound')
   } catch (error) {
     core.setFailed(error.message)
   }
+}
+
+async function getCurrentUpVersion() {
+  return tc.downloadTool(currentVersionUrl).then(
+    downloadPath => {
+      let version = fs.readFileSync(downloadPath, 'utf8').toString().trim()
+      if (!version) {
+        version = currentVersionUrl
+      }
+      return version
+    },
+    error => {
+      core.debug(error)
+      core.warning('GetCurrentVersionFailed')
+      return currentVersionUrl
+    }
+  )
 }
 
 module.exports = {
