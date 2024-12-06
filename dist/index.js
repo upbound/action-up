@@ -6097,7 +6097,6 @@ const exec = __importStar(__nccwpck_require__(236));
 const tc = __importStar(__nccwpck_require__(472));
 const fs = __importStar(__nccwpck_require__(896));
 const upToolname = 'up';
-const currentVersionUrl = 'https://cli.upbound.io/stable/current/version';
 function formatVersion(version) {
     return /^\d/.test(version) ? `v${version}` : version;
 }
@@ -6137,7 +6136,7 @@ async function run() {
         const channel = core.getInput('channel', { required: true });
         const endpoint = core.getInput('endpoint', { required: true });
         if (version.toLowerCase() == 'current') {
-            version = await getCurrentUpVersion();
+            version = await getCurrentUpVersion(channel);
         }
         let installPath = tc.find(upToolname, version);
         if (!installPath) {
@@ -6169,7 +6168,8 @@ async function run() {
             core.setFailed(error.message);
     }
 }
-async function getCurrentUpVersion() {
+async function getCurrentUpVersion(channel) {
+    const currentVersionUrl = `https://cli.upbound.io/${channel}/current/version`;
     return tc.downloadTool(currentVersionUrl).then(downloadPath => {
         let version = fs.readFileSync(downloadPath, 'utf8').toString().trim();
         if (!version) {
