@@ -3,6 +3,8 @@ const exec = require('@actions/exec')
 const tc = require('@actions/tool-cache')
 const fs = require('fs')
 
+const upToolname = 'up'
+
 function formatVersion(version) {
   return /^\d/.test(version) ? `v${version}` : version
 }
@@ -10,7 +12,6 @@ function formatVersion(version) {
 async function downloadUp(version, channel, url, platform, architecture) {
   let os = 'linux'
   let arch = 'amd64'
-  const bin = 'up'
 
   switch (platform) {
     case 'darwin':
@@ -38,12 +39,12 @@ async function downloadUp(version, channel, url, platform, architecture) {
       break
   }
 
-  const downloadURL = `${url}/${channel}/${version}/bin/${os}_${arch}/${bin}`
+  const downloadURL = `${url}/${channel}/${version}/bin/${os}_${arch}/${upToolname}`
   const binaryPath = await tc.downloadTool(downloadURL)
 
-  await exec.exec('chmod +x', [binaryPath])
+  fs.chmodSync(binaryPath, '775')
 
-  return tc.cacheFile(binaryPath, bin, 'up', version)
+  return tc.cacheFile(binaryPath, upToolname, upToolname, version)
 }
 
 async function run() {
@@ -70,8 +71,8 @@ async function run() {
     await exec.exec('up version')
 
     // Skip login if requested
-    const skip_login = core.getInput('skip_login')
-    if (skip_login.toLowerCase() === 'true') {
+    const skipLogin = core.getInput('skip-login')
+    if (skipLogin.toLowerCase() === 'true') {
       core.info('Skipping up login')
       return
     }

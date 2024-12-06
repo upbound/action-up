@@ -13,10 +13,10 @@ inputs:
   url:
     description: 'Where to download up from'
     default: 'https://cli.upbound.io'
-  token:
+  api-token:
     description: 'Upbound API token'
     default: ''
-  skip_login:
+  skip-login:
     description: 'Skip login'
     default: 'false'
 
