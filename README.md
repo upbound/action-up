@@ -31,6 +31,15 @@ steps. As an example, you can set your Upbound context:
   run: up ctx my-org/upbound-gcp-us-west-1/default/my-ctp
 ```
 
+To install up without authentication:
+
+```yaml
+- name: Install up
+  uses: upbound/action-up@v1
+  with:
+    skip-login: true
+```
+
 ## Contributing
 
 > [!NOTE]
