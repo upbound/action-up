@@ -125,7 +125,7 @@ jobs:
         run: up version
 
   test-action-robot-token-and-api-token:
-    name: GitHub Actions Test robot-token
+    name: GitHub Actions Test robot-token and api-token
     runs-on: ubuntu-latest
 
     steps:
@@ -136,7 +136,6 @@ jobs:
       - name: Install up
         id: test-action
         uses: ./
-        continue-on-error: true
         with:
           api-token: ${{ secrets.UP_API_TOKEN }}
           robot-token: ${{ secrets.UP_ROBOT_TOKEN }}
