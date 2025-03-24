@@ -104,3 +104,22 @@ jobs:
             echo "Error: Expected version v0.32.0 but got $INSTALLED_VERSION"
             exit 1
           fi
+
+  test-action-robot-token:
+    name: GitHub Actions Test robot-token
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Install up
+        id: test-action
+        uses: ./
+        with:
+          robot-token: ${{ secrets.UP_API_TOKEN }}
+          organization: github-actions-test
+
+      - name: Verify Installation
+        run: up version
