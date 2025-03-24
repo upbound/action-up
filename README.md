@@ -9,7 +9,7 @@ To install the latest version of `up` and use it in GitHub Actions workflows,
 [add it as a secret to your repository](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-encrypted-secrets-for-a-repository),
 and add the following step to your workflow:
 
-#### Using a personal API Token
+Using a personal API Token:
 
 ```yaml
 - name: Install and login with up
@@ -19,7 +19,7 @@ and add the following step to your workflow:
     organization: my-org
 ```
 
-#### Using a Robot Token
+Using a Robot Token:
 
 ```yaml
 - name: Install and login with up
@@ -29,7 +29,7 @@ and add the following step to your workflow:
     organization: my-org
 ```
 
-#### Skip-login
+Skip-login:
 
 ```yaml
 - name: Install up
