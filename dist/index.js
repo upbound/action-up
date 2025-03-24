@@ -6151,13 +6151,19 @@ async function run() {
             core.info('Skipping up login');
             return;
         }
-        const apiToken = core.getInput('api-token', { required: true });
+        const apiToken = core.getInput('api-token');
+        const robotToken = core.getInput('robot-token');
         const organization = core.getInput('organization', { required: true });
-        core.setSecret(apiToken);
+        // Ensure only one of apiToken or robotToken is provided
+        if ((apiToken && robotToken) || (!apiToken && !robotToken)) {
+            throw new Error('You must provide exactly one of "api-token" or "robot-token".');
+        }
+        const token = apiToken || robotToken;
+        core.setSecret(token);
         await exec.exec('up', [
             'login',
             '--token',
-            apiToken,
+            token,
             '--account',
             organization
         ]);
