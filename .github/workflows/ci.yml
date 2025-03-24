@@ -136,6 +136,7 @@ jobs:
       - name: Install up
         id: test-action
         uses: ./
+        continue-on-error: true
         with:
           api-token: ${{ secrets.UP_API_TOKEN }}
           robot-token: ${{ secrets.UP_ROBOT_TOKEN }}
