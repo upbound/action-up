@@ -9,12 +9,33 @@ To install the latest version of `up` and use it in GitHub Actions workflows,
 [add it as a secret to your repository](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-encrypted-secrets-for-a-repository),
 and add the following step to your workflow:
 
+#### Using a personal API Token
+
 ```yaml
 - name: Install and login with up
   uses: upbound/action-up@v1
   with:
     api-token: ${{ secrets.UP_API_TOKEN }}
     organization: my-org
+```
+
+#### Using a Robot Token
+
+```yaml
+- name: Install and login with up
+  uses: upbound/action-up@v1
+  with:
+    robot-token: ${{ secrets.UP_ROBOT_TOKEN }}
+    organization: my-org
+```
+
+#### Skip-login
+
+```yaml
+- name: Install up
+  uses: upbound/action-up@v1
+  with:
+    skip-login: true
 ```
 
 `up` will now be available in the environement and can be used in following
@@ -29,15 +50,6 @@ steps. As an example, you can set your Upbound context:
 
 - name: Set Upbound context
   run: up ctx my-org/upbound-gcp-us-west-1/default/my-ctp
-```
-
-To install up without authentication:
-
-```yaml
-- name: Install up
-  uses: upbound/action-up@v1
-  with:
-    skip-login: true
 ```
 
 ## Contributing

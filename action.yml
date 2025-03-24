@@ -16,6 +16,9 @@ inputs:
   api-token:
     description: 'Upbound API token'
     default: ''
+  robot-token:
+    description: 'Upbound Robot token'
+    default: ''
   skip-login:
     description: 'Skip login'
     default: 'false'

@@ -104,3 +104,50 @@ jobs:
             echo "Error: Expected version v0.32.0 but got $INSTALLED_VERSION"
             exit 1
           fi
+
+  test-action-robot-token:
+    name: GitHub Actions Test robot-token
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Install up
+        id: test-action
+        uses: ./
+        with:
+          robot-token: ${{ secrets.UP_API_TOKEN }}
+          organization: github-actions-test
+
+      - name: Verify Installation
+        run: up version
+
+  test-action-robot-token-and-api-token:
+    name: GitHub Actions Test robot-token
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Install up
+        id: test-action
+        uses: ./
+        continue-on-error: true
+        with:
+          api-token: ${{ secrets.UP_API_TOKEN }}
+          robot-token: ${{ secrets.UP_ROBOT_TOKEN }}
+          organization: github-actions-test
+
+      - name: Check that action failed as expected
+        if: steps.run-action.outcome == 'failure'
+        run: echo "Action failed as expected when both tokens were provided."
+
+      - name: Fail if action did not fail
+        if: steps.run-action.outcome != 'failure'
+        run: |
+          echo "Action succeeded but should have failed when both tokens were provided."
+          exit 1
