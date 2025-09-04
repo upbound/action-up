@@ -22,6 +22,9 @@ inputs:
   organization:
     description: 'Organization to select when login'
     default: ''
+  disable-telemetry:
+    description: 'Set to true to disable sending anonymous telemetry to Upbound'
+    default: 'false'
 
 branding:
   color: 'purple'

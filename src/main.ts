@@ -77,6 +77,11 @@ async function run(): Promise<void> {
     core.addPath(installPath)
     core.debug(`up CLI version ${version} installed to ${installPath}`)
 
+    const disableTelemetry = core.getInput('disable-telemetry')
+    if (disableTelemetry.toLowerCase() === 'true') {
+      await exec.exec('up', ['config', 'set', 'telemetry.disabled', 'true'])
+    }
+
     core.info('Verifying installation...')
     await exec.exec('up', ['version'])
 
