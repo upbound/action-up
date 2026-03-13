@@ -17,7 +17,7 @@ and add the following step to your workflow:
     organization: my-org
 ```
 
-`up` will now be available in the environement and can be used in following
+`up` will now be available in the environment and can be used in following
 steps. As an example, you can set your Upbound context:
 
 ```yaml
@@ -70,7 +70,7 @@ To install up without authentication:
    PASS  __tests__/main.test.js
     action
       ✓ installs the up cli successfully (2 ms)
-      ✓ installs the up cli successfully without a v in front of the version (1 ms)
+      ✓ installs the up cli without a v prefix (1 ms)
 
    PASS  __tests__/index.test.js
     index
